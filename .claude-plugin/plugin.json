@@ -1,0 +1,17 @@
+{
+  "name": "yt-lokus",
+  "description": "Transcrit une vidéo YouTube en note Markdown pour Lokus : métadonnées, résumé, avis critique et transcription horodatée cliquable.",
+  "version": "0.1.0",
+  "author": {
+    "name": "bendevcat"
+  },
+  "homepage": "https://github.com/bendevcat/yt-lokus",
+  "license": "MIT",
+  "keywords": [
+    "youtube",
+    "transcription",
+    "lokus",
+    "notes",
+    "yt-dlp"
+  ]
+}

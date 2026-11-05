@@ -1,0 +1,26 @@
+{
+  "name": "yt-lokus-marketplace",
+  "owner": {
+    "name": "bendevcat"
+  },
+  "metadata": {
+    "description": "Marketplace du plugin yt-lokus",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "yt-lokus",
+      "source": "./",
+      "description": "Transcrit une vidéo YouTube en note Markdown pour Lokus : métadonnées, résumé, avis critique et transcription horodatée cliquable.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "keywords": [
+        "youtube",
+        "transcription",
+        "lokus",
+        "notes",
+        "yt-dlp"
+      ]
+    }
+  ]
+}
