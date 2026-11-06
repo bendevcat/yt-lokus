@@ -4,14 +4,14 @@
     "name": "bendevcat"
   },
   "metadata": {
-    "description": "Marketplace du plugin yt-lokus",
+    "description": "Marketplace for the yt-lokus plugin",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "yt-lokus",
       "source": "./",
-      "description": "Transcrit une vidéo YouTube en note Markdown pour Lokus : métadonnées, résumé, avis critique et transcription horodatée cliquable.",
+      "description": "Turns a YouTube video into a Markdown note for Lokus: metadata, summary, critical review and a clickable timestamped transcript.",
       "version": "0.1.0",
       "category": "productivity",
       "keywords": [

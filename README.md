@@ -1,24 +1,26 @@
 # yt-lokus
 
-Un plugin Claude Code qui transforme une vidéo YouTube en note Markdown pour
-[Lokus](https://github.com/lokus-ai/lokus). Donnez un lien à Claude, il récupère les
-sous-titres et range une note prête à relire dans votre dossier de notes.
+**English** · [Français](README.fr.md)
 
-## Ce que contient une note
+A Claude Code plugin that turns a YouTube video into a Markdown note for
+[Lokus](https://github.com/lokus-ai/lokus). Give Claude a link: it fetches the
+subtitles and files a note, ready to read, in your notes folder.
 
-- Métadonnées de la vidéo : miniature, chaîne, langue, nombre de mots
-- Résumé en français, quelle que soit la langue de la vidéo, avec des horodatages cliquables
-- Avis critique : ce qui tient, ce qui se discute, ce que ça change pour vous
-- Transcription découpée en paragraphes horodatés, avec les chapitres et les changements de voix
-- Tags thématiques qui relient la note aux autres dans le graphe de Lokus
+## What a note contains
 
-Avant de rendre la note, un contrôle vérifie que chaque horodatage cité existe dans la transcription.
+- Video metadata: thumbnail, channel, language, word count
+- A summary in French, whatever the language of the video, with clickable timestamps
+- A critical review: what holds up, what is debatable, what it changes for you
+- A transcript split into timestamped paragraphs, with chapters and speaker changes
+- Topic tags that link the note to the others in the Lokus graph
 
-## Prérequis
+Before handing over the note, a check confirms that every cited timestamp exists in the transcript.
 
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) : `brew install yt-dlp` ou `pipx install yt-dlp`
-- Python 3.9 ou plus récent, sans dépendance à installer
-- Aucune clé d'API : les sous-titres viennent directement de YouTube
+## Requirements
+
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp): `brew install yt-dlp` or `pipx install yt-dlp`
+- Python 3.9 or later, nothing else to install
+- No API key: subtitles come straight from YouTube
 
 ## Installation
 
@@ -27,31 +29,31 @@ claude plugin marketplace add bendevcat/yt-lokus
 claude plugin install yt-lokus@yt-lokus-marketplace
 ```
 
-Indiquez ensuite la racine de vos notes dans la variable `YT_LOKUS_NOTES` de `~/.claude/settings.json` :
+Then set the root of your notes with the `YT_LOKUS_NOTES` variable in `~/.claude/settings.json`:
 
 ```json
 {
   "env": {
-    "YT_LOKUS_NOTES": "/chemin/vers/vos/notes"
+    "YT_LOKUS_NOTES": "/path/to/your/notes"
   }
 }
 ```
 
-Sans cette variable, Claude vous demande le chemin. Les notes arrivent dans le sous-dossier `yt-transcribe`.
+Without this variable, Claude asks you for the path. Notes land in the `yt-transcribe` subfolder.
 
-## Utilisation
+## Usage
 
-Demandez-le simplement, par exemple « transcris cette vidéo dans Lokus : <url> », ou
-tapez `/yt-lokus:yt-lokus <url>`.
+Just ask, for example "transcribe this video into Lokus: <url>", or
+type `/yt-lokus:yt-lokus <url>`.
 
-Une vidéo déjà transcrite est signalée avant d'en refaire une, et une note existante n'est jamais écrasée.
+A video that was already transcribed is flagged before a new note is made, and an existing note is never overwritten.
 
-## Limites
+## Limitations
 
-- Une vidéo sans sous-titres, même automatiques, ne peut pas être transcrite : le plugin ne fait pas de reconnaissance vocale
-- Les sous-titres automatiques déforment les noms propres : Claude liste les corrections évidentes dans un encadré
-- Les notes sont écrites pour Lokus, sans frontmatter, et le texte généré est en français
+- A video with no subtitles at all, not even automatic ones, cannot be transcribed: the plugin does no speech recognition
+- Automatic subtitles garble proper nouns: Claude lists the obvious corrections in a callout
+- Notes are written for Lokus, without frontmatter, and the generated text (summary, review, section titles) is in French
 
-## Licence
+## License
 
 [MIT](LICENSE)
