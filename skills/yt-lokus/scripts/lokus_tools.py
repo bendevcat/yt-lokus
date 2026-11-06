@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Outils autour des notes Lokus.
+"""Tools for Lokus notes.
 
-    lokus_tools.py find <id_video> <racine>   notes qui mentionnent déjà cette vidéo
-    lokus_tools.py tags <racine>              tags utilisés, du plus fréquent au plus rare
-    lokus_tools.py check <note.md>            contrôle une note terminée (code 1 si erreur)
+    lokus_tools.py find <video_id> <root>   notes that already mention this video
+    lokus_tools.py tags <root>              tags in use, most frequent first
+    lokus_tools.py check <note.md>          checks a finished note (exit 1 on error)
+
+French and English notes are both understood.
 """
 import collections
 import os
@@ -11,8 +13,10 @@ import re
 import sys
 from pathlib import Path
 
-TRANSCRIPT_HEADING = "## Transcription"
-REVIEW_HEADING = "## Avis critique"
+TRANSCRIPT_HEADING = re.compile(r"^## (?:Transcription|Transcript)$", re.MULTILINE)
+REVIEW_WITH_VERDICT = re.compile(
+    r"^## (?:Avis critique|Critical review)\n+\*\*Verdict ?:\*\* \S", re.MULTILINE
+)
 TIMESTAMP = re.compile(r"\[((?:\d+:)?\d\d:\d\d)\]\(https://youtu\.be/[\w-]+\?t=(\d+)\)")
 TAG = re.compile(r"(?:^|(?<=\s))#([^\W\d][\w-]*)", re.MULTILINE)
 TAG_LINE = re.compile(r"#[a-z0-9-]+(?: #[a-z0-9-]+)*")
@@ -37,7 +41,7 @@ def tags(root: str) -> None:
     counts = collections.Counter()
     for _, text in notes(root, skip=("templates",)):
         # une transcription n'est pas une liste de tags
-        counts.update(TAG.findall(text.split(TRANSCRIPT_HEADING)[0]))
+        counts.update(TAG.findall(TRANSCRIPT_HEADING.split(text, maxsplit=1)[0]))
     for tag, count in sorted(counts.items(), key=lambda item: (-item[1], item[0])):
         print(count, tag)
 
@@ -54,32 +58,33 @@ def check(note: str) -> None:
     errors = []
     for marker in ("<!-- RESUME -->", "<!-- AVIS -->"):
         if marker in text:
-            errors.append(f"le marqueur {marker} est encore là")
-    if TRANSCRIPT_HEADING not in text:
-        sys.exit(f"ERREUR : pas de section « {TRANSCRIPT_HEADING} »")
-    head, transcript = text.split(TRANSCRIPT_HEADING, 1)
-    if not re.search(rf"^{REVIEW_HEADING}\n+\*\*Verdict :\*\* \S", head, re.MULTILINE):
-        errors.append(f"section « {REVIEW_HEADING} » absente ou sans verdict")
+            errors.append(f"marker {marker} is still there")
+    parts = TRANSCRIPT_HEADING.split(text, maxsplit=1)
+    if len(parts) != 2:
+        sys.exit("ERROR: no transcript section")
+    head, transcript = parts
+    if not REVIEW_WITH_VERDICT.search(head):
+        errors.append("critical review section missing or without a verdict")
     cited = TIMESTAMP.findall(head)
     known = set(TIMESTAMP.findall(transcript))
     if not cited:
-        errors.append("aucun horodatage cité dans le résumé")
+        errors.append("no timestamp cited in the summary")
     for stamp, offset in cited:
         if (stamp, offset) not in known:
-            errors.append(f"horodatage absent de la transcription : {stamp} (t={offset})")
+            errors.append(f"timestamp not in the transcript: {stamp} (t={offset})")
         if seconds(stamp) != int(offset):
-            errors.append(f"horodatage incohérent : {stamp} ≠ t={offset}")
+            errors.append(f"inconsistent timestamp: {stamp} ≠ t={offset}")
     lines = text.split("\n")
     tag_line = lines[2] if len(lines) > 2 else ""
     if not TAG_LINE.fullmatch(tag_line):
-        errors.append(f"ligne de tags mal formée : {tag_line!r}")
+        errors.append(f"malformed tag line: {tag_line!r}")
     elif len(tag_line.split()) < 4:
-        errors.append("moins de 2 tags thématiques")
+        errors.append("fewer than 2 topic tags")
     for error in errors:
-        print("ERREUR :", error)
+        print("ERROR:", error)
     if errors:
         sys.exit(1)
-    print(f"OK : {len(cited)} horodatages cités, tous présents")
+    print(f"OK: {len(cited)} timestamps cited, all present")
 
 
 def main() -> None:

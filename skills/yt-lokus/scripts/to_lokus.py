@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Convertit des sous-titres YouTube récupérés par yt-dlp en note Markdown pour Lokus.
+"""Turns YouTube subtitles fetched by yt-dlp into a Markdown note for Lokus.
 
-    to_lokus.py <video.info.json> <video.LANG.json3> <dossier_sortie>
+    to_lokus.py <video.info.json> <video.LANG.json3> <output_dir> [note_lang]
 
-Les deux fichiers viennent de yt-dlp (--write-info-json --write-subs
---write-auto-subs --sub-format json3).
+Both files come from yt-dlp (--write-info-json --write-subs --write-auto-subs
+--sub-format json3). note_lang sets the language of the note's labels: `fr` or
+`en` (default), any other value falls back to English.
 
-Écrit <dossier_sortie>/<titre>.md et imprime le chemin. Si le fichier existe
-déjà, il n'est pas écrasé (suffixe -2, -3…). Les sections « Résumé » et « Avis
-critique » contiennent les marqueurs <!-- RESUME --> et <!-- AVIS --> que Claude
-remplace ensuite.
+Writes <output_dir>/<title>.md and prints its path. An existing file is never
+overwritten (suffix -2, -3…). The summary and review sections hold the markers
+<!-- RESUME --> and <!-- AVIS -->, which Claude then replaces.
 """
 import json
 import re
@@ -22,6 +22,41 @@ SHORT_TURN_WORDS = 3  # en dessous, une prise de parole est une simple relance
 CHAPTER_GRACE_SECONDS = 15  # délai pour finir la phrase avant de couper à un chapitre
 SENTENCE_END = re.compile(r"[.?!…]+(?=\s|$)")
 SOUND_TAG = re.compile(r"\[[^\]]*\]|♪+")  # [musique], [Applaudissements]…
+
+LABELS = {
+    "fr": {
+        "colon": " :",
+        "thumbnail": "miniature",
+        "channel": "Chaîne",
+        "language": "Langue",
+        "words": "Mots",
+        "transcribed": "Transcrit le",
+        "summary": "Résumé",
+        "review": "Avis critique",
+        "transcript": "Transcription",
+        "auto": "**Sous-titres automatiques** : noms propres et termes techniques"
+                " peuvent être mal transcrits.",
+        "voices": " Un « — » marque un changement de voix détecté par YouTube.",
+        "translated": "**Sous-titres traduits automatiquement** : la vidéo est en"
+                      " « {spoken} », la piste « {track} » est une traduction de YouTube.",
+    },
+    "en": {
+        "colon": ":",
+        "thumbnail": "thumbnail",
+        "channel": "Channel",
+        "language": "Language",
+        "words": "Words",
+        "transcribed": "Transcribed on",
+        "summary": "Summary",
+        "review": "Critical review",
+        "transcript": "Transcript",
+        "auto": "**Automatic subtitles**: proper nouns and technical terms"
+                " may be mistranscribed.",
+        "voices": " A “—” marks a speaker change detected by YouTube.",
+        "translated": "**Auto-translated subtitles**: the video is in “{spoken}”,"
+                      " the “{track}” track is a YouTube translation.",
+    },
+}
 
 
 def fmt_ts(seconds: float) -> str:
@@ -133,7 +168,9 @@ def safe_filename(title: str) -> str:
     return (name or "transcript")[:120]
 
 
-def build_note(d: dict) -> str:
+def build_note(d: dict, note_lang: str = "en") -> str:
+    labels = LABELS.get(note_lang.split("-")[0].lower(), LABELS["en"])
+    colon = labels["colon"]
     vid = d["video_id"]
     url = f"https://www.youtube.com/watch?v={vid}"
     lang = d["language_code"]
@@ -144,13 +181,11 @@ def build_note(d: dict) -> str:
 
     warn = ""
     if caption == "auto":
-        voices = (" Un « — » marque un changement de voix détecté par YouTube."
-                  if any(s.get("speaker_change") for s in d["segments"]) else "")
-        warn = ("\n> [!note]\n> **Sous-titres automatiques** : noms propres et termes techniques"
-                f" peuvent être mal transcrits.{voices}\n")
+        voices = labels["voices"] if any(s.get("speaker_change") for s in d["segments"]) else ""
+        warn = f"\n> [!note]\n> {labels['auto']}{voices}\n"
     if d.get("translated_from"):
-        warn += (f"\n> [!warning]\n> **Sous-titres traduits automatiquement** : la vidéo est en"
-                 f" « {d['translated_from']} », la piste « {lang} » est une traduction de YouTube.\n")
+        translated = labels["translated"].format(spoken=d["translated_from"], track=lang)
+        warn += f"\n> [!warning]\n> {translated}\n"
 
     # Pas de frontmatter : Lokus 1.2 ne le gère pas (il devient un titre à la
     # première sauvegarde) et son graphe ne lit que les #tags du texte.
@@ -158,19 +193,19 @@ def build_note(d: dict) -> str:
 
 #youtube #transcript
 
-[![miniature]({d.get("thumbnail_url") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"})]({url})
+[![{labels["thumbnail"]}]({d.get("thumbnail_url") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"})]({url})
 
-**Source :** [YouTube]({url}) · **Chaîne :** [{d.get("author_name") or "?"}]({d.get("author_url") or url}) · **Langue :** {lang} ({caption}) · **Mots :** {d["word_count"]} · **Transcrit le :** {date.today().isoformat()}
+**Source{colon}** [YouTube]({url}) · **{labels["channel"]}{colon}** [{d.get("author_name") or "?"}]({d.get("author_url") or url}) · **{labels["language"]}{colon}** {lang} ({caption}) · **{labels["words"]}{colon}** {d["word_count"]} · **{labels["transcribed"]}{colon}** {date.today().isoformat()}
 {warn}
-## Résumé
+## {labels["summary"]}
 
 <!-- RESUME -->
 
-## Avis critique
+## {labels["review"]}
 
 <!-- AVIS -->
 
-## Transcription
+## {labels["transcript"]}
 
 {body}
 """
@@ -232,7 +267,7 @@ def from_ytdlp(info_path: str, subs_path: str) -> dict:
 
 def main() -> None:
     args = sys.argv[1:]
-    if len(args) != 3:
+    if len(args) not in (3, 4):
         sys.exit(__doc__)
     data = from_ytdlp(args[0], args[1])
     out_dir = Path(args[2])
@@ -241,7 +276,7 @@ def main() -> None:
     path, n = out_dir / f"{base}.md", 2
     while path.exists():
         path, n = out_dir / f"{base}-{n}.md", n + 1
-    path.write_text(build_note(data), encoding="utf-8")
+    path.write_text(build_note(data, *args[3:]), encoding="utf-8")
     print(path)
 
 

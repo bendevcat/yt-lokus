@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Marketplace for the yt-lokus plugin",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "yt-lokus",
       "source": "./",
       "description": "Turns a YouTube video into a Markdown note for Lokus: metadata, summary, critical review and a clickable timestamped transcript.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "productivity",
       "keywords": [
         "youtube",

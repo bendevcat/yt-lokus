@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [0.2.0] - 2026-11-06
 
-English documentation: `README.md` is now in English, the French version moves to `README.fr.md`, and the plugin descriptions are in English.
+Configurable note language: `YT_LOKUS_LANG`, or the language you use with Claude. Section titles exist in English and French. The skill, script messages and documentation are now in English, with a French README.
 
-Documentation en anglais : `README.md` passe en anglais, la version française devient `README.fr.md`, et les descriptions du plugin sont en anglais.
+Langue des notes configurable : `YT_LOKUS_LANG`, ou la langue que vous utilisez avec Claude. Les titres de sections existent en français et en anglais. Le skill, les messages des scripts et la documentation passent en anglais, avec un README en français.
 
 ## [0.1.0] - 2026-11-06
 

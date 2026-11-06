@@ -1,7 +1,7 @@
 {
   "name": "yt-lokus",
   "description": "Turns a YouTube video into a Markdown note for Lokus: metadata, summary, critical review and a clickable timestamped transcript.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "bendevcat"
   },
